@@ -1,0 +1,47 @@
+<#
+.SYNOPSIS
+    This PowerShell script ensures that Windows audits Sensitive Privilege Use successes (Privilege Use > Sensitive Privilege Use).
+
+.NOTES
+    Author          : Ayaan Sheikh
+    LinkedIn        : https://www.linkedin.com/in/ayaansheikhofficial/
+    GitHub          : https://github.com/ayaan-jpg-cell
+    Date Created    : 2026-11-10
+    Last Modified   : 2026-11-10
+    Version         : 1.0
+    CVEs            : N/A
+    Plugin IDs      : N/A
+    STIG-ID         : WN11-AU-000115
+    Documentation   : https://stigaview.com/products/win11/v2r11/WN11-AU-000115/
+
+.TESTED ON
+    Date(s) Tested  : 2026-11-10
+    Tested By       : Ayaan Sheikh
+    Systems Tested  : Windows 11 (LOG(N) Pacific lab VM)
+    PowerShell Ver. : 5.1
+
+.USAGE
+    Run in PowerShell as Administrator, then rescan in Tenable.
+    PS C:\> .\remediation-STIG-ID-WN11-AU-000115.ps1
+#>
+
+# Shows the current audit setting for Sensitive Privilege Use
+function Get-AuditSetting {
+    $Line = auditpol /get /subcategory:"Sensitive Privilege Use" | Select-String "Sensitive Privilege Use"
+    return ($Line.ToString() -replace "Sensitive Privilege Use", "").Trim()
+}
+
+# WN11-AU-000115
+# Turn on Success auditing for Sensitive Privilege Use
+
+auditpol /set /subcategory:"Sensitive Privilege Use" /success:enable | Out-Null
+
+# Verify configuration
+$Current = Get-AuditSetting
+Write-Host "Sensitive Privilege Use auditing is now: $Current"
+
+if ($Current -match "Success") {
+    Write-Host "SUCCESS: WN11-AU-000115 configured." -ForegroundColor Green
+} else {
+    Write-Host "FAILED: Success auditing is not on." -ForegroundColor Red
+}
